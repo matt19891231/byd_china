@@ -168,6 +168,47 @@ def _power_gear_text(obj: Any) -> str | None:
     return f"P{v}"
 
 
+
+# 充电数值状态：0 -> "未充电", 1 -> "充电中", 15 -> "已连接"
+# 注意：15 在部分车型上拔枪后也不会变，只能当"最近一次连接"看，别单独依赖。
+def _charge_state_text(obj: Any) -> str | None:
+    val = getattr(obj, "charge_state", None)
+    if val is None:
+        return None
+    raw = getattr(val, "value", val)
+    if raw is None:
+        return None
+    try:
+        v = int(raw)
+    except (TypeError, ValueError):
+        return None
+    if v == 1:
+        return "充电中"
+    if v == 0:
+        return "未充电"
+    if v == 15:
+        return "已连接"
+    return None
+
+
+def _booking_time_text(attr: str) -> Callable[[Any], str | None]:
+    """预约充电的开始时间，空值或负数一律当没设置。"""
+
+    def _fn(obj: Any) -> str | None:
+        val = getattr(obj, attr, None)
+        if val is None:
+            return None
+        raw = getattr(val, "value", val)
+        try:
+            v = int(raw)
+        except (TypeError, ValueError):
+            return None
+        if v < 0:
+            return None
+        return f"{v:02d}"
+
+    return _fn
+
 # =============================================
 # SENSOR DESCRIPTIONS - strictly ordered per user spec
 # =============================================
@@ -221,6 +262,15 @@ SENSOR_DESCRIPTIONS: tuple[BydSensorDescription, ...] = (
     BydSensorDescription(key="left_rear_tire_pressure", source="realtime", icon="mdi:car-tire-alert", native_unit_of_measurement=UnitOfPressure.KPA, suggested_display_precision=0),
     BydSensorDescription(key="right_rear_tire_pressure", source="realtime", icon="mdi:car-tire-alert", native_unit_of_measurement=UnitOfPressure.KPA, suggested_display_precision=0),
     # --- 充电 ---
+    # 2026-11-15 新增：区分"智能充电提示文案"和真正的充电状态。
+    # small_ui_smart_charge_tips 只是提示语（如"已预约充电"），插拔枪都不会变；
+    # charge_state 才是实时数值（0 未充电 / 1 充电中 / 15 已连接）。
+    BydSensorDescription(key="charge_state", source="realtime", icon="mdi:ev-plug-type2",
+                         value_fn=_charge_state_text),
+    BydSensorDescription(key="booking_charging_hour", source="realtime", icon="mdi:clock-start",
+                         value_fn=_booking_time_text("booking_charging_hour")),
+    BydSensorDescription(key="booking_charging_minute", source="realtime", icon="mdi:clock-start",
+                         value_fn=_booking_time_text("booking_charging_minute")),
     BydSensorDescription(key="small_ui_smart_charge_tips", source="realtime", icon="mdi:ev-station"),
     BydSensorDescription(key="charging_power", source="realtime", icon="mdi:flash"),
     BydSensorDescription(key="remaining_hours", source="realtime", icon="mdi:clock-outline"),
