@@ -90,6 +90,7 @@
       "ect": { "name": "变速箱油温状态" },
       "tirepressure_system": { "name": "胎压系统" },
       "small_ui_smart_charge_tips": { "name": "充电状态" },
+      "charge_gun_connected": { "name": "充电枪连接" },
       "charge_state": { "name": "充电实时状态" },
       "booking_charging_hour": { "name": "预约充电·小时" },
       "booking_charging_minute": { "name": "预约充电·分钟" },

@@ -99,6 +99,7 @@
       "ect": { "name": "ECT" },
       "tirepressure_system": { "name": "Tire pressure system" },
       "small_ui_smart_charge_tips": { "name": "Charging state" },
+      "charge_gun_connected": { "name": "Charging gun" },
       "charge_state": { "name": "Charge state" },
       "booking_charging_hour": { "name": "Scheduled charge hour" },
       "booking_charging_minute": { "name": "Scheduled charge minute" },

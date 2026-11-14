@@ -209,6 +209,28 @@ def _booking_time_text(attr: str) -> Callable[[Any], str | None]:
 
     return _fn
 
+
+
+def _gun_connected_text(obj: Any) -> str | None:
+    """充电枪连接状态。
+
+    2026-11-15 从原始报文里挖出来的字段：chargeGunConnectStatus
+    （模型没映射，但 raw 里有；0=未插枪，1=已插枪，待实车确认）。
+    connectState / chargeState=15 拔枪后都不变，不能用来判断。
+    """
+    raw = getattr(obj, "raw", None) or {}
+    for key in ("chargeGunConnectStatus", "chargeGunConnectStatusRaw"):
+        if key not in raw:
+            continue
+        try:
+            v = int(raw.get(key))
+        except (TypeError, ValueError):
+            continue
+        if v < 0:
+            continue
+        return "已插枪" if v == 1 else "未插枪"
+    return None
+
 # =============================================
 # SENSOR DESCRIPTIONS - strictly ordered per user spec
 # =============================================
@@ -262,6 +284,10 @@ SENSOR_DESCRIPTIONS: tuple[BydSensorDescription, ...] = (
     BydSensorDescription(key="left_rear_tire_pressure", source="realtime", icon="mdi:car-tire-alert", native_unit_of_measurement=UnitOfPressure.KPA, suggested_display_precision=0),
     BydSensorDescription(key="right_rear_tire_pressure", source="realtime", icon="mdi:car-tire-alert", native_unit_of_measurement=UnitOfPressure.KPA, suggested_display_precision=0),
     # --- 充电 ---
+    # 2026-11-15 新增：枪连接状态（raw 里的 chargeGunConnectStatus）。
+    BydSensorDescription(key="charge_gun_connected", source="realtime",
+                         icon="mdi:ev-plug-type2",
+                         value_fn=_gun_connected_text),
     # 2026-11-15 新增：区分"智能充电提示文案"和真正的充电状态。
     # small_ui_smart_charge_tips 只是提示语（如"已预约充电"），插拔枪都不会变；
     # charge_state 才是实时数值（0 未充电 / 1 充电中 / 15 已连接）。
